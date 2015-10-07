@@ -1,13 +1,14 @@
-<?php namespace Laravel\Cashier;
+<?php
 
-interface BillableRepositoryInterface {
+namespace Laravel\Cashier;
 
-	/**
-	 * Find a BillableInterface implementation by Stripe ID.
-	 *
-	 * @param  string  $stripeId
-	 * @return \Laravel\Cashier\BillableInterface
-	 */
-	public function find($stripeId);
-
+interface BillableRepositoryInterface
+{
+    /**
+     * Find a Billable implementation by Stripe ID.
+     *
+     * @param  string  $stripeId
+     * @return \Laravel\Cashier\Contracts\Billable
+     */
+    public function find($stripeId);
 }

@@ -1,38 +1,49 @@
-<?php namespace Laravel\Cashier;
+<?php
+
+namespace Laravel\Cashier;
 
 use Illuminate\Support\Facades\Config;
+use Laravel\Cashier\Contracts\Billable as BillableContract;
 
-class EloquentBillableRepository implements BillableRepositoryInterface {
+class EloquentBillableRepository implements BillableRepositoryInterface
+{
+    /**
+     * Find a Billable implementation by Stripe ID.
+     *
+     * @param  string  $stripeId
+     * @return \Laravel\Cashier\Contracts\Billable
+     */
+    public function find($stripeId)
+    {
+        $billableModels = Config::get('services.stripe.model');
 
-	/**
-	 * Find a BillableInterface implementation by Stripe ID.
-	 *
-	 * @param  string  $stripeId
-	 * @return \Laravel\Cashier\BillableInterface
-	 */
-	public function find($stripeId)
-	{
-		$model = $this->createCashierModel(Config::get('services.stripe.model'));
+        if (! is_array($billableModels)) {
+            $billableModels = [$billableModels];
+        }
 
-		return $model->where($model->getStripeIdName(), $stripeId)->first();
-	}
+        foreach ($billableModels as $billableModel) {
+            $model = $this->createCashierModel($billableModel);
 
-	/**
-	 * Create a new instance of the Auth model.
-	 *
-	 * @param  string  $model
-	 * @return \Laravel\Cashier\BillableInterface
-	 */
-	protected function createCashierModel($class)
-	{
-		$model = new $class;
+            if ($result = $model->where($model->getStripeIdName(), $stripeId)->first()) {
+                return $result;
+            }
+        }
+    }
 
-		if ( ! $model instanceof BillableInterface)
-		{
-			throw new \InvalidArgumentException("Model does not implement BillableInterface.");
-		}
+    /**
+     * Create a new instance of the Auth model.
+     *
+     * @param  string  $class
+     * @return \Laravel\Cashier\Contracts\Billable
+     */
+    protected function createCashierModel($class)
+    {
+        $model = new $class;
 
-		return $model;
-	}
+        if (! $model instanceof BillableContract) {
+            throw new \InvalidArgumentException('Model does not implement Billable.');
+        }
 
+        return $model;
+    }
 }
